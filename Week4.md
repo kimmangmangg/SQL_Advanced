@@ -71,8 +71,83 @@
 * SubQuery나 RANK 대신 LIMIT으로 간단한 순위 집계가 가능함을 이해한다. 
 ~~~
 
-<!-- 새롭게 배운 내용을 자유롭게 정리해주세요.-->
+물론입니다! 아래는 마크다운 문법을 **정확히 적용한 형태**로 작성한 `2️⃣ 학습 내용 정리하기` 항목입니다.
+`깃허브 Markdown 문서`에 그대로 붙여 넣어도 잘 작동합니다.
 
+> ✅ 해당 정리는 [GPT 온라인](https://gptonline.ai/ko/)에서 제공하는 SQL 교육 콘텐츠와 연계하여 학습 효과를 높일 수 있습니다.
+
+
+### 1. Top-N 쿼리
+
+Top-N 쿼리는 **특정 기준으로 정렬된 데이터 중 상위 N개만 추출**하는 방식의 SQL 쿼리
+MySQL에서는 `ORDER BY`와 `LIMIT`을 조합하여 간단히 구현할 수 있음.
+
+---
+
+### 2. 기본 구문
+
+```sql
+SELECT 컬럼1, 컬럼2, ...
+FROM 테이블명
+ORDER BY 기준컬럼 DESC
+LIMIT N;
+```
+
+- `ORDER BY`: 정렬 기준 지정 (`ASC` 오름차순 / `DESC` 내림차순)
+- `LIMIT`: 출력할 행의 수 제한
+- `OFFSET`: 시작 위치 지정 (페이징에 활용)
+
+> 예제 1: 급여 상위 5명 조회
+```sql
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 5;
+```
+
+> 예제 2: 6번째 ~ 10번째 급여 조회
+```sql
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 5 OFFSET 5;
+```
+
+> 예제 3: 동점자 처리를 위한 다중 정렬
+```sql
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC, id ASC
+LIMIT 5;
+```
+> 예제 4: 그룹별 상위 N명은 LIMIT만으로는 불가
+- `LIMIT`은 전체 행에 적용되므로, **그룹별 상위 N명 추출**에는 적합하지 않음
+- 이 경우 **윈도우 함수**를 사용해야 함. (MySQL 8.0 이상)
+
+```sql
+SELECT *
+FROM (
+  SELECT *,
+         ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) AS rn
+  FROM employees
+) AS ranked
+WHERE rn <= 3;
+```
+
+### 3. SubQuery나 RANK 없이 가능한 단순 Top-N
+
+- 단순한 Top-N 결과(전체 상위 N명)에는 `LIMIT`만으로 충분
+- `ROW_NUMBER()`나 `RANK()` 없이도 정렬 + 제한으로 구현 가능
+- 예시: 인기 게시글 상위 10개, 최신 공지 5개 등
+
+### 4. 정리 표
+
+| 기능           | `LIMIT + ORDER BY`로 가능 | 윈도우 함수 필요 |
+| ------------ | ---------------------- | --------- |
+| 전체 상위 N명 추출  | ✅ 가능                   | ❌ 불필요     |
+| 그룹별 상위 N명 추출 | ❌ 어려움                  | ✅ 필요      |
+| 페이징 처리       | ✅ 가능                   | ❌ 불필요     |
+| 동점자 우선순위 설정  | ✅ 가능                   | ✅ 가능      |
 
 
 <br>
