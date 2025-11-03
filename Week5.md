@@ -69,9 +69,79 @@
 * 'WITH RECURSIVE' 문법을 활용해 계층형 구조를 탐색할 수 있다.
 ~~~
 
-<!-- 새롭게 배운 내용을 자유롭게 정리해주세요.-->
+* **재귀 CTE (Common Table Expression)**: 자기 자신을 참조하는 서브쿼리를 포함한 CTE.
+* 사용 예:
 
+```sql
+WITH RECURSIVE cte (n) AS (
+  SELECT 1
+  UNION ALL
+  SELECT n + 1 FROM cte
+  WHERE n < 5
+)
+SELECT * FROM cte;
+```
 
+* CTE가 자기 자신을 참조하면 반드시 `WITH RECURSIVE` 사용.
+* `RECURSIVE` 생략 시: `ERROR 1146` 발생.
+
+### 재귀 CTE의 두 부분
+* **비재귀 SELECT**: 초기 시드값. CTE 이름 참조 없음.
+* **재귀 SELECT**: 이전 결과 참조. CTE 이름을 `FROM`에 1회 참조.
+
+### 열 타입과 NULL
+* 종료 조건 없으면 무한 루프 발생 가능.
+* 열 타입은 비재귀 SELECT 기준.
+* 모든 열은 NULL 허용으로 간주.
+
+### UNION 종류
+* `UNION ALL`: 중복 허용
+* `UNION DISTINCT`: 중복 제거 → 무한 루프 방지
+
+* 재귀 SELECT는 직전 반복에서 생성된 행만을 입력으로 사용.
+* 여러 쿼리 블록이 있을 경우 실행 순서는 정의되지 않음.
+* 열은 위치가 아니라 이름 기준으로 참조됨.
+
+### 컬럼 폭(CAST) 이슈
+* 비재귀 SELECT에서 정의한 문자열 길이보다 재귀 SELECT 결과가 길면 잘릴 수 있음 ➡️ 해결: CAST()로 열 폭 미리 확장.
+* 사용 예:
+
+```sql
+WITH RECURSIVE cte AS (
+  SELECT 1 AS n, CAST('abc' AS CHAR(20)) AS str
+  UNION ALL
+  SELECT n + 1, CONCAT(str, str) FROM cte WHERE n < 3
+)
+SELECT * FROM cte;
+```
+
+### 문법 제약 (재귀 SELECT 내부)
+
+* ❌ 사용 불가: `집계 함수`, `윈도 함수`, `GROUP BY`, `ORDER BY`, `DISTINCT`
+* `LIMIT`: MySQL 8.0.19 이상부터 사용 가능
+
+### 기타 제약
+
+* 재귀 SELECT는 CTE를 `FROM`에서 1회만 참조 가능
+* `LEFT JOIN`의 오른쪽에서 CTE 사용 불가
+
+### 성능 및 안전장치
+
+* `cte_max_recursion_depth`: 최대 재귀 깊이 제한
+* `max_execution_time`: 실행 시간 제한
+* 옵티마이저 힌트: `/*+ MAX_EXECUTION_TIME(1000) */`
+
+```sql
+SET SESSION cte_max_recursion_depth = 10;
+SET SESSION max_execution_time = 1000;
+
+WITH RECURSIVE cte(n) AS (
+  SELECT 1
+  UNION ALL
+  SELECT n + 1 FROM cte LIMIT 10000
+)
+SELECT /*+ MAX_EXECUTION_TIME(1000) */ * FROM cte;
+```
 
 ## 2. 셀프 조인
 
@@ -80,7 +150,32 @@
 * 같은 테이블 내에서 상호 관계를 탐색할 수 있는 셀프 조인의 구조를 이해하고 사용할 수 있다. 
 ~~~
 
-<!-- 새롭게 배운 내용을 자유롭게 정리해주세요.-->
+* 셀프 조인(Self Join) 은 하나의 테이블을 자기 자신과 조인하는 SQL 문법
+* 한 테이블의 두 행 간의 관계(상하, 연결, 부모-자식 등) 를 찾고자 할 때 주로 사용
+* 동일한 테이블을 두 개의 별칭(alias) 으로 나눠 사용
+
+```sql
+SELECT A.컬럼1, B.컬럼2
+FROM 테이블명 AS A
+JOIN 테이블명 AS B ON A.기준컬럼 = B.기준컬럼;
+```
+
+* 사용 예: 직원과 매니저 관계
+
+```sql
+SELECT emp.name AS 직원, mgr.name AS 매니저
+FROM employees AS emp
+JOIN employees AS mgr ON emp.manager_id = mgr.id;
+```
+* employees 테이블 내에서 manager_id를 통해 직원-매니저 관계를 찾는 것이 목적이라고 한다면,
+* 위의 코드처럼 같은 테이블의 두 역할(직원/매니저)을 나눠서 조인해야 함
+
+### 셀프 조인과 일반 조인의 차이점
+
+| 구분    | 일반 조인       | 셀프 조인              |
+| ----- | ----------- | ------------------ |
+| 조인 대상 | 서로 다른 두 테이블 | 같은 테이블을 두 번 참조     |
+| 별칭 사용 | 필수는 아님      | **별칭 필수** (혼동 방지용) |
 
 
 
@@ -146,8 +241,33 @@ LEFT JOIN Employees e2 ON e1.manager_id = e2.id;
 
 
 
-~~~
-여기에 답을 작성해주세요.
+~~~sql
+WITH RECURSIVE org_chart AS (
+  -- 비재귀: 최상위 관리자부터 시작
+  SELECT 
+    id, 
+    name, 
+    manager_id, 
+    1 AS depth
+  FROM Employees
+  WHERE manager_id IS NULL
+
+  UNION ALL
+
+  -- 재귀: 각 직원의 하위 직원 탐색
+  SELECT 
+    e.id, 
+    e.name, 
+    e.manager_id, 
+    oc.depth + 1
+  FROM Employees e
+  JOIN org_chart oc ON e.manager_id = oc.id
+)
+
+-- 최종 출력
+SELECT * 
+FROM org_chart
+ORDER BY depth DESC;
 ~~~
 
 
