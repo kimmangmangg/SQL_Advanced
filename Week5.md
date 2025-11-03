@@ -220,8 +220,9 @@ JOIN employees AS mgr ON emp.manager_id = mgr.id;
 ## 문제 인증란
 
 <!-- 이 주석을 지우고 여기에 문제 푼 인증사진을 올려주세요. -->
-
-
+<img width="1667" height="853" alt="Image" src="https://github.com/user-attachments/assets/58f8984f-63d8-420f-95cb-5c3be91f761b" />
+<img width="1621" height="720" alt="Image" src="https://github.com/user-attachments/assets/6d644576-f670-40cf-8bd1-e4a34dd5c3ea" />
+<img width="1678" height="897" alt="Image" src="https://github.com/user-attachments/assets/41646ae7-d47d-4abf-8a23-6d5cc11198bb" />
 
 ---
 
