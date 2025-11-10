@@ -68,6 +68,57 @@ https://shxrecord.tistory.com/181
 
 <!-- 새롭게 배운 내용을 자유롭게 정리해주세요. -->
 
+- 피벗(PIVOT)은 행(Row) 데이터를 열(Column) 데이터로 전환하여, 데이터를 2차원 표 형태로 요약해주는 기능
+
+### 1) 목적
+
+- 데이터를 특정 기준으로 요약
+- 집계함수(합계, 평균, 개수 등)를 이용해 행을 열로 전환
+- 가독성 높고 분석에 용이한 구조로 데이터 표현
+
+> 예시: 직책별(job_id) & 부서별(department_id) 직원 수를 테이블 형태로 표현
+
+### 2) 기본 원리
+
+- 기존 집계: GROUP BY + 집계함수를 통해 다중 행으로 결과 출력
+- **PIVOT**: 집계된 데이터를 행과 열 축을 바꿔 보기 쉽게 정리
+<img width="753" height="354" alt="Image" src="https://github.com/user-attachments/assets/36953192-a135-4b25-a2ff-9bca2c06caf9" />
+
+> 일반 집계 예시 (PIVOT 적용 전)
+```sql
+SELECT job_id,
+       department_id,
+       COUNT(employee_id) AS count
+FROM employees
+GROUP BY job_id, department_id;
+```
+<img width="422" height="431" alt="Image" src="https://github.com/user-attachments/assets/48eae52f-399e-4879-a543-71a7ce10c368" />
+
+### ✅ 3) 오라클 SQL의 PIVOT 문법
+```sql
+WITH temp AS (
+    SELECT job_id,
+           department_id,
+           employee_id
+    FROM employees
+)
+SELECT *
+FROM temp
+PIVOT (
+    COUNT(employee_id) AS c
+    FOR department_id IN (
+        10 AS d10,
+        20 AS d20,
+        30 AS d30,
+        ...
+        NULL AS none
+    )
+);
+```
+- temp: 서브쿼리 형태로 원본 데이터 지정
+- COUNT(employee_id): 집계함수
+- FOR department_id IN (...): 피벗할 기준 열과 표시할 열 값들
+- AS c: 결과 컬럼에 붙는 접미사 (예: D10_C, D20_C)
 
 
 ## 2. UNPIVOT
