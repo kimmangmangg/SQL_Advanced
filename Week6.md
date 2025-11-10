@@ -115,10 +115,13 @@ PIVOT (
     )
 );
 ```
+<img width="696" height="369" alt="Image" src="https://github.com/user-attachments/assets/65edce16-c44a-4759-b2e6-2b9f38967420" /><br>
 - temp: 서브쿼리 형태로 원본 데이터 지정
 - COUNT(employee_id): 집계함수
 - FOR department_id IN (...): 피벗할 기준 열과 표시할 열 값들
 - AS c: 결과 컬럼에 붙는 접미사 (예: D10_C, D20_C)
+
+
 
 
 ## 2. UNPIVOT
@@ -131,7 +134,44 @@ PIVOT (
 
 <!-- 새롭게 배운 내용을 자유롭게 정리해주세요. -->
 
+- UNPIVOT은 기존에 열(Column)로 나뉘어 있던 데이터를 다시 행(Row)으로 되돌리는 연산
+- PIVOT의 반대 역할을 하며, “넓은(wide)” 형태의 데이터를 “긴(long)” 형태로 바꾸는 것.
 
+### 1) 목적
+- 분석이나 전처리를 위해 데이터를 다시 집계 전 형태로 정규화(normalize) 해야 할 때 사용
+- PIVOT으로 데이터를 시각적으로 보기 쉽게 정리했더라도, 다시 분석 도구에 넣기 위해선 원래 구조(행 기반)로 바꿔야 할 때가 많음
+- 머신러닝, 통계 분석, 외부 시스템 전송 등에서는 열 기반 데이터 구조가 불편할 수 있기 때문.
+
+### ✅ 2) 오라클 SQL에서의 기본 문법
+
+```sql
+SELECT * FROM 테이블이름A
+UNPIVOT (
+  새_값_컬럼명 FOR 기준_컬럼명 IN (
+    기존컬럼1 AS 기준값1,
+    기존컬럼2 AS 기준값2,
+    ...
+  )
+);
+```
+> UNPIVOT 예제 코드
+```sql
+select * from pivot_sample
+UNPIVOT (
+count_employee for department_id in (d10_c as 10,
+                                     d20_c as 20,
+                                     d30_c as 30,
+                                     d40_c as 40,
+                                     d50_c as 50,
+                                     d60_c as 60,
+                                     d70_c as 70,
+                                     d80_c as 80,
+                                     d90_c as 90,
+                                     d100_c as 100,
+                                     none_c as null)
+);
+```
+<img width="422" height="431" alt="Image" src="https://github.com/user-attachments/assets/48eae52f-399e-4879-a543-71a7ce10c368" />
 
 ---
 
