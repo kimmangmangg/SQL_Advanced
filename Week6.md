@@ -192,8 +192,7 @@ https://leetcode.com/problems/reformat-department-table/description/
 ## 문제 인증란
 
 <!-- 이 주석을 지우고 여기에 문제 푼 인증사진을 올려주세요. -->
-
-
+<img width="1586" height="794" alt="Image" src="https://github.com/user-attachments/assets/6c363afc-54c1-4bf2-8876-337f952b5363" />
 
 ## 확인 문제 
 
@@ -217,8 +216,20 @@ https://leetcode.com/problems/reformat-department-table/description/
 | B          | Feb       | 110       |
 | B          | Mar       | 140       |
 
-```
-여기에 SQL 쿼리를 작성해주세요!
+```sql
+SELECT branch, 'Jan' AS month, Jan_sales AS sales
+FROM table1
+
+UNION ALL
+
+SELECT branch, 'Feb' AS month, Feb_sales AS sales
+FROM table1
+
+UNION ALL
+
+SELECT branch, 'Mar' AS month, Mar_sales AS sales
+FROM table1;
+
 ```
 
 
@@ -245,12 +256,15 @@ https://leetcode.com/problems/reformat-department-table/description/
 | A          | 100           | 120           | 130           |
 | B          | 90            | 110           | 140           |
 
+~~~sql
+SELECT
+  branch,
+  MAX(CASE WHEN month = 'Jan' THEN sales END) AS Jan_sales,
+  MAX(CASE WHEN month = 'Feb' THEN sales END) AS Feb_sales,
+  MAX(CASE WHEN month = 'Mar' THEN sales END) AS Mar_sales
+FROM table2
+GROUP BY branch;
 ~~~
-여기에 SQL 쿼리를 작성해주세요!
-~~~
-
-
-
 
 
 
